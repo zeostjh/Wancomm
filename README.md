@@ -2,6 +2,34 @@
 
 A real-time voice communication system built with Qt and C++. VoiceChat provides low-latency audio transmission between multiple users over a network, with a simple press-to-talk interface and multi-channel support.
 
+## Quick Start
+
+**1. Build the application:**
+```bash
+./build.sh
+```
+
+**2. Start the server (on one machine):**
+```bash
+./build/voicechat-server
+```
+Click "START SERVER" - it will listen on port 5000.
+
+**3. Connect clients (on other machines):**
+```bash
+./build/voicechat-client
+```
+Enter a username, the server's IP address, select a channel (1-4), and click Connect.
+
+**4. Talk!**
+- Press and hold the red TALK button to transmit
+- Toggle the green LISTEN button on to hear others
+- Only users on the same channel can hear each other
+
+That's it! See below for detailed installation and usage instructions.
+
+---
+
 ## What It Does
 
 VoiceChat is a networked intercom application that allows multiple users to communicate in real-time using voice. It features:
@@ -33,9 +61,16 @@ You'll need these libraries installed:
 - PortAudio (audio I/O)
 - Opus (audio codec)
 
-On macOS:
+**On macOS:**
 ```bash
 brew install cmake qt portaudio opus
+```
+
+**On Linux (Ubuntu/Debian):**
+```bash
+sudo apt-get update
+sudo apt-get install cmake build-essential qtbase6-dev \
+    libportaudio2 portaudio19-dev libopus0 libopus-dev
 ```
 
 ### Building
