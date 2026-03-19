@@ -1,56 +1,46 @@
-# VoiceChat - Professional Intercom System
+# VoiceChat
 
-A professional real-time voice communication system inspired by ClearCom HelixNet and FreeSpeak beltpack systems. Features a sleek dark mode interface with intuitive Talk/Listen controls and support for up to 10 simultaneous users.
+A real-time voice communication system built with Qt and C++. VoiceChat provides low-latency audio transmission between multiple users over a network, with a simple press-to-talk interface and multi-channel support.
 
-## Features
+## What It Does
 
-### 🎨 Professional ClearCom-Inspired Interface
-- **Dark mode design** with professional orange accent colors
-- **Large, tactile buttons** - Talk (red) and Listen (green) controls
-- **Live LED indicators** showing Talk and Listen states
-- **Audio level meters** with color-coded TX/RX visualization
-- **Compact, focused layout** optimized for production environments
+VoiceChat is a networked intercom application that allows multiple users to communicate in real-time using voice. It features:
 
-### 👥 Multi-User Support
-- **Up to 10 simultaneous users** with custom usernames
-- **Live user list** showing who's connected and their status
-- **Real-time indicators** showing who's talking (🔴) and listening (🟢)
-- **User authentication** via login dialog on startup
+- **Press-to-talk audio transmission** - Hold the Talk button to broadcast your voice
+- **4 independent channels** - Users on the same channel can hear each other
+- **Multi-user support** - Up to 10 simultaneous users per server
+- **Server/client architecture** - One machine runs as a server hub, others connect as clients
+- **Visual feedback** - See who's talking and listening with real-time indicators
+- **Audio level meters** - Monitor transmission and reception levels
 
-### 📡 4-Channel Intercom System
-- **4 independent channels** for different production groups:
-  - 🔴 Channel 1 - PRODUCTION
-  - 🟢 Channel 2 - STAGE
-  - 🔵 Channel 3 - TECH
-  - 🟡 Channel 4 - DIRECTOR
-- **Channel-isolated audio** - only users on the same channel hear each other
+## How It Works
 
-### 🎙️ Professional Audio Controls
-- **Press-to-Talk button** - Hold to transmit (ClearCom style)
-- **Listen toggle** - Turn listening on/off as needed
-- **Visual feedback** - LED indicators for all states
-- **Audio level monitoring** - Real-time TX/RX meters
+VoiceChat uses a centralized server model where all audio is routed through a single server application:
 
-### 🖥️ Server/Client Architecture
-- **Dedicated server mode** for network hub
-- **Multi-client support** with automatic user discovery
-- **Heartbeat system** for connection monitoring
-- **Automatic cleanup** of disconnected clients
+1. **Server** - Acts as the central hub, receiving audio from all clients and routing it to other clients on the same channel
+2. **Clients** - Connect to the server with a username, capture audio from the microphone when Talk is pressed, and play received audio through speakers
+3. **Channels** - Audio is isolated by channel number, so only users on Channel 1 hear other Channel 1 users
+4. **Codec** - Audio is compressed using Opus codec for efficient network transmission (~24 kbps)
+5. **UDP Protocol** - Fast, low-latency packet delivery over UDP sockets
 
 ## Installation
 
 ### Prerequisites
-- CMake 3.10 or higher
-- Qt 6.x
-- PortAudio
-- Opus audio codec library
 
-### macOS
+You'll need these libraries installed:
+- CMake 3.10+
+- Qt 6.x
+- PortAudio (audio I/O)
+- Opus (audio codec)
+
+On macOS:
 ```bash
 brew install cmake qt portaudio opus
 ```
 
-### Build
+### Building
+
+Quick build:
 ```bash
 ./build.sh
 ```
@@ -63,183 +53,126 @@ cmake ..
 make
 ```
 
+This creates three executables:
+- `voicechat` - Combined client/server chooser
+- `voicechat-server` - Dedicated server
+- `voicechat-client` - Dedicated client
+
 ## Usage
 
-### Starting the Application
+### Running as Server
 
-1. **Run the application:**
-   ```bash
-   ./build/voicechat
-   ```
+Start the server application:
+```bash
+./build/voicechat-server
+```
 
-2. **Login Dialog** will appear:
-   - Enter your **username** (up to 20 characters)
-   - Select **Server Mode** or **Client Mode**
-   - Enter **Server IP** (for clients)
-   - Enter **Port** (default: 5000)
+Or use the combined app and select "Server Mode" in the dialog. The server will listen on UDP port 5000 (configurable) and display connected users.
 
-### Server Mode
+### Running as Client
 
-1. Select "Server Mode" in the login dialog
-2. Click "START SERVER"
-3. Server will listen for incoming client connections
-4. Monitor connected users in the users list
+Start the client application:
+```bash
+./build/voicechat-client
+```
 
-### Client Mode
+Or use the combined app and select "Client Mode". You'll need to:
+1. Enter a username
+2. Enter the server IP address
+3. Select a channel (1-4)
+4. Click Connect
 
-1. Select "Client Mode" in the login dialog
-2. Enter the server's IP address
-3. Enter your username
-4. Click "CONNECT TO SERVER"
-5. You'll see other connected users appear in the list
+### Controls
 
-### Using the Intercom
+**Talk Button (Red)**
+- Press and hold to transmit audio
+- Your voice is sent to all users on your channel
+- LED indicator shows when you're transmitting
 
-#### Talk Button (Red)
-- **Press and hold** to transmit audio
-- **Release** to stop transmitting
-- LED indicator turns green when talking
-- Only users on your channel will hear you
+**Listen Button (Green)**
+- Click to toggle listening on/off
+- When enabled, you hear other users on your channel
+- When disabled, no audio is played (mute mode)
 
-#### Listen Button (Green)
-- **Click to toggle** listening on/off
-- Green when ON, gray when OFF
-- When ON, you hear other users on your channel
-- When OFF, no audio is received (privacy mode)
+**Audio Meters**
+- TX meter (green/yellow/red) - Shows your microphone input level
+- RX meter (blue) - Shows incoming audio level from other users
 
-#### Channel Selection
-- Choose from 4 available channels
-- Only users on the same channel can communicate
-- Switch channels require disconnecting and reconnecting
+**Users List**
+- Shows all connected users and their usernames
+- Indicators show who is currently talking (🔴) or listening (🟢)
 
-#### Audio Levels
-- **TX (Transmit)** - Green/Yellow/Red meter showing your microphone level
-- **RX (Receive)** - Blue meter showing incoming audio level
-- Levels update in real-time
+## Technical Overview
 
-### Connected Users List
+### Architecture
 
-The bottom section shows:
-- **User count** - Total users online
-- **User list** with status indicators:
-  - 🔴 Username (talking) - User is currently transmitting
-  - 🟢 Username - User is listening
-  - ⚪ Username - User is muted/not listening
+**Server**
+- Listens for UDP packets on a configurable port (default 5000)
+- Maintains a list of connected users with their channels and states
+- Routes audio packets to users on the same channel
+- Monitors heartbeat packets and disconnects inactive clients
 
-## Network Architecture
+**Client**
+- Captures audio via PortAudio when Talk button is pressed
+- Compresses audio using Opus codec (24 kbps bitrate)
+- Sends UDP packets to server with audio data, username, and state
+- Receives and decodes audio from server
+- Plays audio through speakers when Listen is enabled
+- Sends periodic heartbeat packets to maintain connection
 
-### Server Functions
-- Acts as a central hub for all audio traffic
-- Routes audio packets between clients on the same channel
-- Maintains list of connected users
-- Monitors client heartbeats
-- Automatically disconnects inactive clients (5 second timeout)
-
-### Client Functions
-- Connects to server with unique username
-- Sends audio only when Talk button is pressed
-- Receives audio only when Listen is enabled
-- Sends heartbeat every second
-- Filters audio by channel
-
-### Protocol
-
-Audio packets include:
+**Protocol**
+Each packet contains:
 - Packet type (Audio, UserJoin, UserLeave, Heartbeat)
-- Sequence number
-- Timestamp
-- Username
-- Channel number
-- Talk/Listen status
-- Encoded audio data (Opus codec)
+- Sequence number and timestamp
+- Username (up to 20 chars)
+- Channel number (1-4)
+- Talk/Listen status flags
+- Encoded audio data (Opus frames)
 
-## Configuration
+### Audio Specifications
 
-### Audio Settings
-- **Sample Rate:** 48 kHz
-- **Bitrate:** 24 kbps Opus
-- **Frame Size:** 20ms (960 samples)
-- **Channels:** Mono
+- Sample rate: 48 kHz
+- Encoding: Opus codec, mono, 24 kbps
+- Frame size: 20ms (960 samples)
+- Latency: ~20-50ms typical
+- Bandwidth: ~24 kbps per active talker
 
-### Network Settings
-- **Protocol:** UDP
-- **Default Port:** 5000
-- **Packet Size:** Up to 4KB
-- **Heartbeat Interval:** 1 second
-- **Client Timeout:** 5 seconds
+### Technology Stack
 
-## Keyboard Shortcuts
-
-*(Future enhancement - not yet implemented)*
-- `Space` - Hold to Talk
-- `L` - Toggle Listen
-- `1-4` - Quick channel switch
-- `Ctrl+Q` - Quit
+- **GUI:** Qt 6 (QWidget-based interface)
+- **Audio I/O:** PortAudio (cross-platform audio)
+- **Codec:** Opus (efficient, low-latency compression)
+- **Network:** BSD sockets with UDP protocol
+- **Threading:** C++ std::thread for audio processing
+- **Build:** CMake
 
 ## Troubleshooting
 
-### Audio Issues
-- Check audio device selection
-- Ensure microphone permissions are granted
-- Verify input/output levels in system settings
+**No audio received**
+- Check that Listen button is enabled (green)
+- Verify you're on the same channel as the speaker
+- Check system audio settings and permissions
 
-### Connection Issues
-- Verify server IP address is correct
-- Check firewall settings (UDP port must be open)
-- Ensure server is running before clients connect
-- Check network connectivity
+**No audio transmitted**
+- Ensure Talk button is pressed and held down
+- Verify microphone permissions in system settings
+- Check microphone is selected as input device
 
-### Multi-User Issues
-- Ensure all users are on the same channel
-- Verify Talk button is being pressed
-- Check that Listen is enabled
-- Confirm users aren't timed out (check server console)
+**Cannot connect to server**
+- Verify server is running
+- Check server IP address is correct
+- Ensure firewall allows UDP traffic on the configured port
+- Confirm client and server are on the same network
+
+**User disconnects unexpectedly**
+- Check network stability
+- Verify heartbeat packets are being sent (every second)
+- Server timeout is 5 seconds - poor connections may disconnect
 
 ## System Requirements
 
-- macOS 10.15+ (Catalina or later)
+- macOS 10.15+ or Linux
 - 4GB RAM minimum
-- Network connection (LAN or Internet)
+- Network connection (LAN recommended)
 - Microphone and speakers/headphones
-- UDP port access (default: 5000)
-
-## Technical Details
-
-### Architecture
-- **GUI Framework:** Qt 6
-- **Audio I/O:** PortAudio
-- **Audio Codec:** Opus
-- **Network:** BSD Sockets (UDP)
-- **Threading:** C++ std::thread with atomic operations
-
-### Performance
-- Low latency: ~20-50ms typical
-- Bandwidth: ~24 kbps per active talker
-- Scales to 10 simultaneous users on same channel
-- Efficient packet routing at server
-
-## Future Enhancements
-
-- [ ] Keyboard shortcuts for Talk button
-- [ ] Volume controls per user
-- [ ] Audio recording/playback
-- [ ] Text chat integration
-- [ ] Multiple simultaneous channel monitoring
-- [ ] Encrypted audio transmission
-- [ ] Dynamic audio quality adjustment
-- [ ] Mobile app version
-
-## Credits
-
-Inspired by professional intercom systems:
-- Clear-Com HelixNet
-- Clear-Com FreeSpeak II
-- RTS (Radio Television Specialist) systems
-
-## License
-
-[Add your license here]
-
-## Support
-
-For issues or questions, please contact [your contact info].
+- Firewall access for UDP port (default 5000)
