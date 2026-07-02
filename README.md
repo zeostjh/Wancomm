@@ -1,4 +1,4 @@
-# VoiceChat
+# WanComm
 
 A real-time voice communication system built with Qt and C++. VoiceChat provides low-latency audio transmission between multiple users over a network, with a simple press-to-talk interface and multi-channel support.
 
